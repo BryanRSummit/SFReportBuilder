@@ -1,4 +1,5 @@
 from sf_login import sf_login
+from create_report import create_report
 import pandas as pd
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
@@ -24,10 +25,27 @@ def read_csv_file(file_path):
         return None
 
 
+def insert_data_to_salesforce(sf, data, salesforce_object):
+    for index, row in data.iterrows():
+        record = {
+            'Name': row['Name'],
+            'CloseDate': row['CloseDate'],
+            'Amount': row['Amount']
+        }
+        sf.__getattr__(salesforce_object).create(record)
+
+
 if __name__ == "__main__":
-    sf = sf_login()
-    csv_file_path = select_csv_file()
-    data = read_csv_file(csv_file_path)
-    if data is not None:
-        print("CSV Data:")
-        print(data.head()) 
+    prompt = ""
+    while prompt != "x":
+        prompt = input("Press enter to select a CSV file to create a Salesforce report from. Type x to quit.")
+        csv_file_path = select_csv_file()
+        data = read_csv_file(csv_file_path)
+        # Would need to get Agent information from website or something, or add it in the CSV somewhere
+        
+        if data is not None:
+            sf = sf_login()
+            account_ids = data['Account ID'].values.tolist()  # Assuming 'AccountId' column exists in the CSV
+            
+            report_id = create_report(sf, account_ids)
+            print("Created Report ID:", report_id)
